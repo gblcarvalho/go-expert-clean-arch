@@ -4,17 +4,20 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
-	// "net/http"
-	//
-	// graphql_handler "github.com/99designs/gqlgen/graphql/handler"
-	// "github.com/99designs/gqlgen/graphql/playground"
+	"net/http"
+
+	graphql_handler "github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/devfullcycle/20-CleanArch/configs"
 	"github.com/devfullcycle/20-CleanArch/internal/event/handler"
-	// "github.com/devfullcycle/20-CleanArch/internal/infra/graph"
+	"github.com/devfullcycle/20-CleanArch/internal/infra/graph"
 	"github.com/devfullcycle/20-CleanArch/internal/infra/grpc/pb"
 	"github.com/devfullcycle/20-CleanArch/internal/infra/grpc/service"
 	"github.com/devfullcycle/20-CleanArch/internal/infra/web/webserver"
 	"github.com/devfullcycle/20-CleanArch/pkg/events"
+	"github.com/gorilla/websocket"
 	"github.com/streadway/amqp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -58,21 +61,39 @@ func main() {
 	pb.RegisterOrderServiceServer(grpcServer, orderService)
 	reflection.Register(grpcServer)
 
+
 	fmt.Println("Starting gRPC server on port", configs.GRPCServerPort)
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", configs.GRPCServerPort))
 	if err != nil {
 		panic(err)
 	}
-	grpcServer.Serve(lis)
+	go grpcServer.Serve(lis)
 
-	// srv := graphql_handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
-	// 	CreateOrderUseCase: *createOrderUseCase,
-	// }}))
-	// http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	// http.Handle("/query", srv)
+	schema := graph.NewExecutableSchema(graph.Config{
+		Resolvers: &graph.Resolver{
+			CreateOrderUseCase: *createOrderUseCase,
+			ListOrdersUseCase: *listOrdersUseCase,
+		},
+	})
 
-	// fmt.Println("Starting GraphQL server on port", configs.GraphQLServerPort)
-	// http.ListenAndServe(":"+configs.GraphQLServerPort, nil)
+	srv := graphql_handler.New(schema)
+	srv.AddTransport(transport.POST{})
+	srv.AddTransport(transport.Options{})
+	srv.AddTransport(transport.GET{})
+	srv.AddTransport(transport.Websocket{
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true // ou implemente validação de origem
+			},
+		},
+	})
+	srv.Use(extension.Introspection{})
+
+	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/query", srv)
+
+	fmt.Println("Starting GraphQL server on port", configs.GraphQLServerPort)
+	http.ListenAndServe(":"+configs.GraphQLServerPort, nil)
 }
 
 func getRabbitMQChannel() *amqp.Channel {
