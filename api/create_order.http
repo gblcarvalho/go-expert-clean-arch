@@ -1,9 +1,32 @@
-POST http://localhost:8000/order HTTP/1.1
+### Cadastrar Order 1
+POST http://localhost:8000/order
 Host: localhost:8000
 Content-Type: application/json
 
 {
-    "id":"a",
-    "price": 100.5,
-    "tax": 0.5
+  "id": "order-001",
+  "price": 150.00,
+  "tax": 15.00
+}
+
+### Cadastrar Order 2
+POST http://localhost:8000/order
+Host: localhost:8000
+Content-Type: application/json
+
+{
+  "id": "order-002",
+  "price": 200.50,
+  "tax": 20.05
+}
+
+### Cadastrar Order 3
+POST http://localhost:8000/order
+Host: localhost:8000
+Content-Type: application/json
+
+{
+  "id": "order-003",
+  "price": 99.99,
+  "tax": 9.99
 }
