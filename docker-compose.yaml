@@ -1,6 +1,23 @@
 version: '3'
 
 services:
+  goapp:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    env_file: 
+      - ./cmd/ordersystem/.env
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   mysql:
     platform: linux/x86_64
     image: mysql:5.7
@@ -14,6 +31,8 @@ services:
       - 3306:3306
     volumes:
       - .docker/mysql:/var/lib/mysql
+    networks:
+      - app-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USER}", "-p${DB_PASSWORD}"]
       interval: 10s
@@ -28,8 +47,15 @@ services:
       - 5672:5672
       - 15672:15672
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   migrate:
     image: migrate/migrate
@@ -44,4 +70,10 @@ services:
         "-database", "mysql://${DB_USER}:${DB_PASSWORD}@tcp(mysql:${DB_PORT})/${DB_NAME}",
         "up"
     ]
+    networks:
+      - app-network
     restart: on-failure
+
+networks:
+  app-network:
+    driver: bridge
