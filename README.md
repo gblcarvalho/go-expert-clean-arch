@@ -6,13 +6,12 @@ Implementação de um desafio de Clean Architecture. O sistema é composto por u
 Antes de executar o projeto, certifique-se de ter os seguintes softwares instalados:
 
 - Docker
-- Go
 - Docker Compose
 
 ## 🚀 Como rodar o projeto
 1. Subindo o ambiente com Docker Compose
 
-Primeiro, é necessário subir o ambiente que inclui o MySQL e o RabbitMQ, além de executar as migrations. Para isso, execute o comando abaixo na raiz do projeto:
+Execute o seguinte comando apra subir o ambiente via docker compose.
 
 ```bash
 docker compose --env-file ./cmd/ordersystem/.env up -d
@@ -23,17 +22,10 @@ Este comando irá:
 - Subir o MySQL.
 - Subir o RabbitMQ.
 - Executar as migrations necessárias para o MySQL.
+- Iniciar o servidor da applicação Go
 
-2. Rodando o sistema Go
 
-Após subir o ambiente com o Docker Compose, entre no diretório cmd/ordersystem/ e execute o seguinte comando para rodar o sistema:
-
-```bash
-cd ./cmd/ordersystem/
-go run main.go wire_gen.go
-```
-
-Este comando irá iniciar a aplicação. Os serviços estarão disponíveis nas seguintes portas:
+Os serviços da aplicação estarão disponíveis nas seguintes portas:
 - HTTP (RESTful): http://localhost:8000
 - gRPC: localhost:50051
 - GraphQL: localhost:8080
