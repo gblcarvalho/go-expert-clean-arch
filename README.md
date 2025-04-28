@@ -11,7 +11,15 @@ Antes de executar o projeto, certifique-se de ter os seguintes softwares instala
 ## 🚀 Como rodar o projeto
 1. Subindo o ambiente com Docker Compose
 
-Execute o seguinte comando apra subir o ambiente via docker compose.
+Execute os seguintes comando apra subir o ambiente via docker compose.
+
+Primeiro é necessário criar um arquivo .env contendo as variáveis de ambiente
+
+```bash
+cp ./cmd/ordersystem/.env.exemple ./cmd/ordersystem/.env
+```
+
+Depois é só executar o comando abaixo passando o arquivo .env criado como parâmetro
 
 ```bash
 docker compose --env-file ./cmd/ordersystem/.env up -d
